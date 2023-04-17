@@ -26,6 +26,8 @@ colors_list = [
 
 global current_color
 current_color = 0
+global previous_rect
+previous_rect = None
 
 
 def scale_to_meters(x, y):
@@ -83,7 +85,7 @@ def draw_waypoint(window, x: float, y: float, color: tuple = (255, 0, 0)):
     pygame.draw.rect(window, color, (scale_to_pixels(x, y)[0] - 5, scale_to_pixels(x, y)[1] - 5, 10, 10))
 
 
-def draw_trajectory(window, trajectory: CustomTrajectory):
+def draw_trajectory(window, trajectory: tuple[CustomTrajectory, path]):
     """
     Draws a trajectory on the field
     :param window: Pygame window
@@ -103,26 +105,7 @@ def draw_trajectory(window, trajectory: CustomTrajectory):
     current_color += 1
 
 
-def display_coords(screen, coords):
-    font = pygame.font.Font(None, 24)
-    text_x = WINDOW_WIDTH - 150
-    text_y = 30
-
-    if not hasattr(display_coords, 'prev_coords'):
-        display_coords.prev_coords = None
-
-    if coords != display_coords.prev_coords:
-        text = font.render(f"({coords[0]}, {coords[1]})", True, (255, 255, 255))
-
-        pygame.draw.rect(screen, (0, 0, 0), pygame.Rect(text_x, text_y, 125, 20))
-        screen.blit(text, (text_x, text_y))
-
-        pygame.display.update()
-
-        display_coords.prev_coords = coords
-
-
-def display_data(window, coord, data):
+def display_data(window, coord, data, previous=False):
     """
     Displays data on the field
     :param window: Pygame window
@@ -134,18 +117,51 @@ def display_data(window, coord, data):
 
     text_rect = text.get_rect()
     # Draw a rectangle to cover the previous text
-    pygame.draw.rect(
-        window,
-        (0, 0, 0),
-        (
-            scale_to_pixels(coord[0], coord[1])[0],
-            scale_to_pixels(coord[0], coord[1])[1],
-            text_rect.width,
-            text_rect.height
+    global previous_rect
+
+    if previous:
+        if previous_rect is not None:
+            pygame.draw.rect(
+                window,
+                (0, 0, 0),
+                (
+                    scale_to_pixels(coord[0], coord[1])[0],
+                    scale_to_pixels(coord[0], coord[1])[1],
+                    previous_rect.width,
+                    previous_rect.height
+                )
+            )
+        else:
+            pygame.draw.rect(
+                window,
+                (0, 0, 0),
+                (
+                    scale_to_pixels(coord[0], coord[1])[0],
+                    scale_to_pixels(coord[0], coord[1])[1],
+                    text_rect.width,
+                    text_rect.height
+                )
+            )
+        previous_rect = text_rect
+    else:
+        pygame.draw.rect(
+            window,
+            (0, 0, 0),
+            (
+                scale_to_pixels(coord[0], coord[1])[0],
+                scale_to_pixels(coord[0], coord[1])[1],
+                text_rect.width,
+                text_rect.height
+            )
         )
-    )
 
     window.blit(text, scale_to_pixels(coord[0], coord[1]))
+    pygame.display.update()
+
+
+def display_coords(screen, coords):
+    global previous_rect
+    display_data(screen, (2, 7.5), f"({coords[0]}, {coords[1]})", True)
 
 
 def main():
