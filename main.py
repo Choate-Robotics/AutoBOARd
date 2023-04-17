@@ -79,7 +79,6 @@ def draw_waypoint(window, x: float, y: float, color: tuple = (255, 0, 0)):
     :param x: x position in meters
     :param y: y position in meters
     :param color: Color of the point
-    :param radius: Radius of the point
     """
     pygame.draw.rect(window, color, (scale_to_pixels(x, y)[0] - 5, scale_to_pixels(x, y)[1] - 5, 10, 10))
 
@@ -111,11 +110,22 @@ def display_data(window, coord, data):
     :param coord: Coordinate to display the data at
     :param data: Data to display
     """
-
-    # Draw a rectangle to cover the previous text
-
     font = pygame.font.SysFont("Arial", 20)
     text = font.render(data, True, (255, 0, 0))
+
+    text_rect = text.get_rect()
+    # Draw a rectangle to cover the previous text
+    pygame.draw.rect(
+        window,
+        (0, 0, 0),
+        (
+            scale_to_pixels(coord[0], coord[1])[0],
+            scale_to_pixels(coord[0], coord[1])[1],
+            text_rect.width,
+            text_rect.height
+        )
+    )
+
     window.blit(text, scale_to_pixels(coord[0], coord[1]))
 
 
