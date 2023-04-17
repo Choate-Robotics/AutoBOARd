@@ -37,8 +37,8 @@ def scale_to_meters(x, y):
 
     x_offset = (WINDOW_WIDTH - scale * constants.FIELD_WIDTH_METERS) / 2
     y_offset = 0
-    new_x = ((x - x_offset) / scale)
-    new_y = ((WINDOW_HEIGHT - y - y_offset) / scale)
+    new_x = round((x - x_offset) / scale, 3)
+    new_y = round((WINDOW_HEIGHT - y - y_offset) / scale, 3)
     return new_x, new_y
 
 
@@ -84,6 +84,25 @@ def draw_trajectory(window, trajectory: CustomTrajectory):
     current_color += 1
 
 
+def display_coords(screen, coords):
+    font = pygame.font.Font(None, 24)
+    text_x = WINDOW_WIDTH - 150
+    text_y = 30
+
+    if not hasattr(display_coords, 'prev_coords'):
+        display_coords.prev_coords = None
+
+    if coords != display_coords.prev_coords:
+        text = font.render(f"({coords[0]}, {coords[1]})", True, (255, 255, 255))
+
+        pygame.draw.rect(screen, (0, 0, 0), pygame.Rect(text_x, text_y, 125, 20))
+        screen.blit(text, (text_x, text_y))
+
+        pygame.display.update()
+
+        display_coords.prev_coords = coords
+
+
 def main():
     pygame.init()
     window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -93,14 +112,17 @@ def main():
     for trajectory in trajectories:
         draw_trajectory(window, trajectory)
 
-    pygame.display.update()
-
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
+        user_coords = pygame.mouse.get_pos()
+        display_coords(window, scale_to_meters(*user_coords))
+        pygame.time.wait(10)
+
+    pygame.display.update()
     pygame.quit()
 
 
