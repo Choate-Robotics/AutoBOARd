@@ -1,6 +1,6 @@
 import pygame
 import constants
-from util.trajectory_generator import gen_trajectories
+from util.trajectory_generator import CustomTrajectory, gen_trajectories
 from trajectories.coords import coords_list
 
 WINDOW_WIDTH = int(constants.FIELD_WIDTH_METERS * constants.SCALE_FACTOR)
@@ -12,6 +12,18 @@ scaled_field_image = pygame.transform.scale(
     field_image,
     (WINDOW_WIDTH, WINDOW_HEIGHT)
 )
+
+colors_list = [
+    (255, 0, 0),
+    (0, 255, 0),
+    (0, 0, 255),
+    (255, 255, 0),
+    (255, 0, 255),
+    (0, 255, 255),
+]
+
+global current_color
+current_color = 0
 
 
 def scale_to_meters(x, y):
@@ -46,26 +58,40 @@ def scale_to_pixels(x: float, y: float):
     return new_x, new_y
 
 
-def draw_point(window, x: float, y: float):
+def draw_point(window, x: float, y: float, color: tuple = (255, 0, 0)):
     """
     Draws a point on the field
     :param window: Pygame window
     :param x: x position in meters
     :param y: y position in meters
+    :param color: Color of the point
     """
-    pygame.draw.circle(window, (255, 0, 0), scale_to_pixels(x, y), 10)
+    pygame.draw.circle(window, color, scale_to_pixels(x, y), 3)
+
+
+def draw_trajectory(window, trajectory: CustomTrajectory):
+    """
+    Draws a trajectory on the field
+    :param window: Pygame window
+    :param trajectory: Trajectory
+    """
+    global current_color
+    color = colors_list[current_color % len(colors_list)]
+
+    for state in trajectory.trajectory.states():
+        draw_point(window, state.pose.x, state.pose.y, color)
+
+    current_color += 1
 
 
 def main():
-    # Set up Pygame window
     pygame.init()
     window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     window.blit(scaled_field_image, (0, 0))
 
-    initial_x = 1.55
-    initial_y = 0.51
-    draw_point(window, initial_x, initial_y)
-    draw_point(window, initial_x + 5.25, initial_y + 0.43)
+    trajectories = gen_trajectories(coords_list)
+    for trajectory in trajectories:
+        draw_trajectory(window, trajectory)
 
     pygame.display.update()
 
@@ -79,6 +105,4 @@ def main():
 
 
 if __name__ == "__main__":
-    x = gen_trajectories(coords_list)
-    print(x[0].trajectory.states())
     main()
