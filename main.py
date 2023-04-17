@@ -107,13 +107,13 @@ def draw_trajectory(window, trajectory: tuple[CustomTrajectory, path]):
     current_color += 1
 
 
-def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], wait_time: float = .02, realistic_time: bool = False):
+def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed: float = 1.0, continuous: bool = False):
     """
     Animates a trajectory on the field
     :param window: Pygame window
     :param trajectory: Trajectory
-    :param wait_time: Time to wait between each state
-    :param realistic_time: Whether to wait the actual time between each state
+    :param speed: Speed of the animation
+    :param continuous: Whether to draw a continuous curve
     """
 
     global current_color
@@ -124,17 +124,18 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], wait_t
         draw_waypoint(window, point[0], point[1], color)
     draw_waypoint(window, trajectory[1][2][0], trajectory[1][2][1], color)
 
-    if realistic_time:
-        start_time = time.time()
-        for state in trajectory[0].trajectory.states():
-            draw_point(window, state.pose.x, state.pose.y, color)
+    start_time = time.time()
+
+    if continuous:
+        while time.time() - start_time < trajectory[0].trajectory.totalTime() / speed:
+            current_state = trajectory[0].trajectory.sample((time.time() - start_time) * speed)
+            draw_point(window, current_state.pose.x, current_state.pose.y, color)
             pygame.display.update()
-            time.sleep(max(0, state.t - (time.time() - start_time)))
     else:
         for state in trajectory[0].trajectory.states():
             draw_point(window, state.pose.x, state.pose.y, color)
             pygame.display.update()
-            pygame.time.wait(int(wait_time * 1000))
+            time.sleep(max(0, state.t - ((time.time() - start_time) * speed)))
 
     current_color += 1
 
@@ -213,7 +214,7 @@ def main():
     )
 
     for trajectory in trajectories:
-        animate_trajectory(window, trajectory, realistic_time=True)
+        animate_trajectory(window, trajectory, speed=2.0)
 
     running = True
     while running:
