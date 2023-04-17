@@ -1,5 +1,6 @@
 import pygame
 import constants
+from units.path import path
 from util.trajectory_generator import CustomTrajectory, gen_trajectories
 from util.trajectory_estimator import estimate_auto_duration
 from trajectories.coords import coords_list
@@ -59,18 +60,31 @@ def scale_to_pixels(x: float, y: float):
     return new_x, new_y
 
 
-def draw_point(window, x: float, y: float, color: tuple = (255, 0, 0)):
+def draw_point(window, x: float, y: float, color: tuple = (255, 0, 0), radius: int = 1):
     """
     Draws a point on the field
     :param window: Pygame window
     :param x: x position in meters
     :param y: y position in meters
     :param color: Color of the point
+    :param radius: Radius of the point
     """
-    pygame.draw.circle(window, color, scale_to_pixels(x, y), 3)
+    pygame.draw.circle(window, color, scale_to_pixels(x, y), radius)
 
 
-def draw_trajectory(window, trajectory: CustomTrajectory):
+def draw_waypoint(window, x: float, y: float, color: tuple = (255, 0, 0)):
+    """
+    Draws a waypoint on the field
+    :param window: Pygame window
+    :param x: x position in meters
+    :param y: y position in meters
+    :param color: Color of the point
+    :param radius: Radius of the point
+    """
+    pygame.draw.rect(window, color, (scale_to_pixels(x, y)[0] - 5, scale_to_pixels(x, y)[1] - 5, 10, 10))
+
+
+def draw_trajectory(window, trajectory: tuple[CustomTrajectory, path]):
     """
     Draws a trajectory on the field
     :param window: Pygame window
@@ -79,8 +93,13 @@ def draw_trajectory(window, trajectory: CustomTrajectory):
     global current_color
     color = colors_list[current_color % len(colors_list)]
 
-    for state in trajectory.trajectory.states():
+    for state in trajectory[0].trajectory.states():
         draw_point(window, state.pose.x, state.pose.y, color)
+
+    draw_waypoint(window, trajectory[1][0][0], trajectory[1][0][1], color)
+    for point in trajectory[1][1]:
+        draw_waypoint(window, point[0], point[1], color)
+    draw_waypoint(window, trajectory[1][2][0], trajectory[1][2][1], color)
 
     current_color += 1
 

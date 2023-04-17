@@ -75,7 +75,7 @@ def get_trajectory(coords: path) -> CustomTrajectory:
     )
 
 
-def gen_trajectories(coords_list: list[path]) -> list[CustomTrajectory]:
+def gen_trajectories(coords_list: list[path]) -> list[tuple[CustomTrajectory, path]]:
     """
     Generate a list of trajectories from a list of coordinates.
     :param coords_list: List of coordinates.
@@ -84,4 +84,4 @@ def gen_trajectories(coords_list: list[path]) -> list[CustomTrajectory]:
     :rtype: list[CustomTrajectory]
     """
 
-    return [get_trajectory(coords) for coords in coords_list]
+    return [(get_trajectory(coords), coords) for coords in coords_list]

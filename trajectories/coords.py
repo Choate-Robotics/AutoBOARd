@@ -41,4 +41,4 @@ come_back_with_second_cube: path = (
     (3.6, 2.6)
 )
 
-coords_list = [go_get_first_cube, come_back_with_first_cube, go_get_second_cube, come_back_with_second_cube]
+coords_list = [go_get_second_cube]

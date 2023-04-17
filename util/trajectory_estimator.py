@@ -1,3 +1,4 @@
+from units.path import path
 from util.trajectory_generator import CustomTrajectory
 from wpimath.trajectory import Trajectory
 
@@ -11,7 +12,7 @@ def estimate_duration(trajectory: Trajectory):
     return trajectory.totalTime()
 
 
-def estimate_auto_duration(trajectories: list[CustomTrajectory]):
+def estimate_auto_duration(trajectories: list[tuple[CustomTrajectory, path]]):
     """
     Estimates the duration of a list of trajectories
     :param trajectories: List of trajectories
@@ -19,5 +20,5 @@ def estimate_auto_duration(trajectories: list[CustomTrajectory]):
     """
     duration = 0
     for trajectory in trajectories:
-        duration += estimate_duration(trajectory.trajectory)
+        duration += estimate_duration(trajectory[0].trajectory)
     return duration
