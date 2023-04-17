@@ -1,3 +1,5 @@
+import time
+
 import pygame
 import constants
 from units.path import path
@@ -105,6 +107,38 @@ def draw_trajectory(window, trajectory: tuple[CustomTrajectory, path]):
     current_color += 1
 
 
+def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], wait_time: float = .02, realistic_time: bool = False):
+    """
+    Animates a trajectory on the field
+    :param window: Pygame window
+    :param trajectory: Trajectory
+    :param wait_time: Time to wait between each state
+    :param realistic_time: Whether to wait the actual time between each state
+    """
+
+    global current_color
+    color = colors_list[current_color % len(colors_list)]
+
+    draw_waypoint(window, trajectory[1][0][0], trajectory[1][0][1], color)
+    for point in trajectory[1][1]:
+        draw_waypoint(window, point[0], point[1], color)
+    draw_waypoint(window, trajectory[1][2][0], trajectory[1][2][1], color)
+
+    if realistic_time:
+        start_time = time.time()
+        for state in trajectory[0].trajectory.states():
+            draw_point(window, state.pose.x, state.pose.y, color)
+            pygame.display.update()
+            time.sleep(max(0, state.t - (time.time() - start_time)))
+    else:
+        for state in trajectory[0].trajectory.states():
+            draw_point(window, state.pose.x, state.pose.y, color)
+            pygame.display.update()
+            pygame.time.wait(int(wait_time * 1000))
+
+    current_color += 1
+
+
 def display_data(window, coord, data, previous=False):
     """
     Displays data on the field
@@ -179,7 +213,7 @@ def main():
     )
 
     for trajectory in trajectories:
-        draw_trajectory(window, trajectory)
+        animate_trajectory(window, trajectory, realistic_time=True)
 
     running = True
     while running:
