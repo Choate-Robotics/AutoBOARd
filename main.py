@@ -6,6 +6,9 @@ from units.path import path
 from util.trajectory_generator import CustomTrajectory, gen_trajectories
 from util.trajectory_estimator import estimate_auto_duration
 from trajectories.coords import coords_list
+from units.screen import scale_to_pixels, scale_to_meters
+
+from robot import Robot
 
 WINDOW_WIDTH = int(constants.FIELD_WIDTH_METERS * constants.SCALE_FACTOR)
 WINDOW_HEIGHT = int(constants.FIELD_HEIGHT_METERS * constants.SCALE_FACTOR)
@@ -30,38 +33,8 @@ global current_color
 current_color = 0
 global previous_rect
 previous_rect = None
-
-
-def scale_to_meters(x, y):
-    """
-    Scales the x and y coordinates from pixels to meters
-    :param x: x position in pixels
-    :param y: y position in pixels
-    :return: x and y position in meters
-    """
-    scale = WINDOW_HEIGHT / constants.FIELD_HEIGHT_METERS
-
-    x_offset = (WINDOW_WIDTH - scale * constants.FIELD_WIDTH_METERS) / 2
-    y_offset = 0
-    new_x = round((x - x_offset) / scale, 3)
-    new_y = round((WINDOW_HEIGHT - y - y_offset) / scale, 3)
-    return new_x, new_y
-
-
-def scale_to_pixels(x: float, y: float):
-    """
-    Scales the x and y coordinates from meters to pixels
-    :param x: x position in meters
-    :param y: y position in meters
-    :return: x and y position in pixels
-    """
-    scale = WINDOW_HEIGHT / constants.FIELD_HEIGHT_METERS
-
-    x_offset = (WINDOW_WIDTH - scale * constants.FIELD_WIDTH_METERS) / 2
-    y_offset = 0
-    new_x = int(x * scale + x_offset)
-    new_y = int(WINDOW_HEIGHT - (y * scale + y_offset))
-    return new_x, new_y
+global robot
+robot = Robot()
 
 
 def draw_point(window, x: float, y: float, color: tuple = (255, 0, 0), radius: int = 1):
@@ -116,6 +89,7 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
     :param continuous: Whether to draw a continuous curve
     """
 
+
     global current_color
     color = colors_list[current_color % len(colors_list)]
 
@@ -124,18 +98,36 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
         draw_waypoint(window, point[0], point[1], color)
     draw_waypoint(window, trajectory[1][2][0], trajectory[1][2][1], color)
 
+    old_window = window.copy()
+
     start_time = time.time()
 
     if continuous:
         while time.time() - start_time < trajectory[0].trajectory.totalTime() / speed:
             current_state = trajectory[0].trajectory.sample((time.time() - start_time) * speed)
+
+            window.blit(old_window, (0, 0))
             draw_point(window, current_state.pose.x, current_state.pose.y, color)
+            old_window = window.copy()
+
+            robot.set_position(current_state.pose.x, current_state.pose.y, 0)
+
+            robot.draw(window)
+
             pygame.display.update()
     else:
         for state in trajectory[0].trajectory.states():
+            window.blit(old_window, (0, 0))
             draw_point(window, state.pose.x, state.pose.y, color)
+            old_window = window.copy()
+
+            robot.set_position(state.pose.x, state.pose.y, 0)
+            robot.draw(window)
+
             pygame.display.update()
             time.sleep(max(0, state.t - ((time.time() - start_time) * speed)))
+
+    window.blit(old_window, (0, 0))
 
     current_color += 1
 
@@ -146,6 +138,7 @@ def display_data(window, coord, data, previous=False):
     :param window: Pygame window
     :param coord: Coordinate to display the data at
     :param data: Data to display
+    :param previous: Whether to clear the previous coords
     """
     font = pygame.font.SysFont("Arial", 20)
     text = font.render(data, True, (255, 0, 0))
@@ -204,6 +197,10 @@ def main():
     window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     window.blit(scaled_field_image, (0, 0))
 
+    robot_layer = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
+    robot_layer.fill((0, 0, 0, 0))
+    window.blit(robot_layer, (0, 0))
+
     trajectories = gen_trajectories(coords_list)
 
     print(estimate_auto_duration(trajectories))
@@ -214,9 +211,10 @@ def main():
     )
 
     for trajectory in trajectories:
-        animate_trajectory(window, trajectory, speed=2.0)
+        animate_trajectory(window, trajectory, speed=1.0, continuous=True)
 
     running = True
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -224,6 +222,9 @@ def main():
 
         user_coords = pygame.mouse.get_pos()
         display_coords(window, scale_to_meters(*user_coords))
+
+        pygame.display.update()
+
         pygame.time.wait(10)
 
     pygame.display.update()
