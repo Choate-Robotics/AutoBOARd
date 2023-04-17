@@ -104,6 +104,21 @@ def draw_trajectory(window, trajectory: tuple[CustomTrajectory, path]):
     current_color += 1
 
 
+def display_data(window, coord, data):
+    """
+    Displays data on the field
+    :param window: Pygame window
+    :param coord: Coordinate to display the data at
+    :param data: Data to display
+    """
+
+    # Draw a rectangle to cover the previous text
+
+    font = pygame.font.SysFont("Arial", 20)
+    text = font.render(data, True, (255, 0, 0))
+    window.blit(text, scale_to_pixels(coord[0], coord[1]))
+
+
 def main():
     pygame.init()
     window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -112,6 +127,11 @@ def main():
     trajectories = gen_trajectories(coords_list)
 
     print(estimate_auto_duration(trajectories))
+    display_data(
+        window,
+        (12.5, 7.5),
+        "Estimated Auto Duration: " + str(round(estimate_auto_duration(trajectories), 2)) + "s"
+    )
 
     for trajectory in trajectories:
         draw_trajectory(window, trajectory)
