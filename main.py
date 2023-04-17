@@ -1,6 +1,7 @@
 import pygame
 import constants
 from util.trajectory_generator import CustomTrajectory, gen_trajectories
+from util.trajectory_estimator import estimate_auto_duration
 from trajectories.coords import coords_list
 
 WINDOW_WIDTH = int(constants.FIELD_WIDTH_METERS * constants.SCALE_FACTOR)
@@ -90,6 +91,9 @@ def main():
     window.blit(scaled_field_image, (0, 0))
 
     trajectories = gen_trajectories(coords_list)
+
+    print(estimate_auto_duration(trajectories))
+
     for trajectory in trajectories:
         draw_trajectory(window, trajectory)
 

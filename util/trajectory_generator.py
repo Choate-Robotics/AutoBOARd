@@ -68,8 +68,8 @@ def get_trajectory(coords: path) -> CustomTrajectory:
         start_pose=Pose2d(*coords[0]),
         waypoints=[Translation2d(*x) for x in coords[1]],
         end_pose=Pose2d(*coords[2]),
-        max_velocity=1,
-        max_accel=1,
+        max_velocity=coords[3][0],
+        max_accel=coords[3][1],
         start_velocity=0,
         end_velocity=0,
     )
