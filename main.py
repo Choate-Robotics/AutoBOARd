@@ -26,6 +26,8 @@ colors_list = [
 
 global current_color
 current_color = 0
+global previous_rect
+previous_rect = None
 
 
 def scale_to_meters(x, y):
@@ -39,8 +41,8 @@ def scale_to_meters(x, y):
 
     x_offset = (WINDOW_WIDTH - scale * constants.FIELD_WIDTH_METERS) / 2
     y_offset = 0
-    new_x = ((x - x_offset) / scale)
-    new_y = ((WINDOW_HEIGHT - y - y_offset) / scale)
+    new_x = round((x - x_offset) / scale, 3)
+    new_y = round((WINDOW_HEIGHT - y - y_offset) / scale, 3)
     return new_x, new_y
 
 
@@ -103,7 +105,7 @@ def draw_trajectory(window, trajectory: tuple[CustomTrajectory, path]):
     current_color += 1
 
 
-def display_data(window, coord, data):
+def display_data(window, coord, data, previous=False):
     """
     Displays data on the field
     :param window: Pygame window
@@ -115,18 +117,51 @@ def display_data(window, coord, data):
 
     text_rect = text.get_rect()
     # Draw a rectangle to cover the previous text
-    pygame.draw.rect(
-        window,
-        (0, 0, 0),
-        (
-            scale_to_pixels(coord[0], coord[1])[0],
-            scale_to_pixels(coord[0], coord[1])[1],
-            text_rect.width,
-            text_rect.height
+    global previous_rect
+
+    if previous:
+        if previous_rect is not None:
+            pygame.draw.rect(
+                window,
+                (0, 0, 0),
+                (
+                    scale_to_pixels(coord[0], coord[1])[0],
+                    scale_to_pixels(coord[0], coord[1])[1],
+                    previous_rect.width,
+                    previous_rect.height
+                )
+            )
+        else:
+            pygame.draw.rect(
+                window,
+                (0, 0, 0),
+                (
+                    scale_to_pixels(coord[0], coord[1])[0],
+                    scale_to_pixels(coord[0], coord[1])[1],
+                    text_rect.width,
+                    text_rect.height
+                )
+            )
+        previous_rect = text_rect
+    else:
+        pygame.draw.rect(
+            window,
+            (0, 0, 0),
+            (
+                scale_to_pixels(coord[0], coord[1])[0],
+                scale_to_pixels(coord[0], coord[1])[1],
+                text_rect.width,
+                text_rect.height
+            )
         )
-    )
 
     window.blit(text, scale_to_pixels(coord[0], coord[1]))
+    pygame.display.update()
+
+
+def display_coords(screen, coords):
+    global previous_rect
+    display_data(screen, (2, 7.5), f"({coords[0]}, {coords[1]})", True)
 
 
 def main():
@@ -146,14 +181,17 @@ def main():
     for trajectory in trajectories:
         draw_trajectory(window, trajectory)
 
-    pygame.display.update()
-
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
+        user_coords = pygame.mouse.get_pos()
+        display_coords(window, scale_to_meters(*user_coords))
+        pygame.time.wait(10)
+
+    pygame.display.update()
     pygame.quit()
 
 
