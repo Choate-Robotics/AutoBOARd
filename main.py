@@ -1,5 +1,7 @@
 import pygame
 import constants
+from util.trajectory_generator import gen_trajectories
+from trajectories.coords import coords_list
 
 WINDOW_WIDTH = int(constants.FIELD_WIDTH_METERS * constants.SCALE_FACTOR)
 WINDOW_HEIGHT = int(constants.FIELD_HEIGHT_METERS * constants.SCALE_FACTOR)
@@ -77,4 +79,6 @@ def main():
 
 
 if __name__ == "__main__":
+    x = gen_trajectories(coords_list)
+    print(x[0].trajectory.states())
     main()

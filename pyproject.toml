@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "path-visualizer"
+version = "0.1.0"
+description = "Visualize wpilib trajectories on the FRC field."
+authors = ["Sidharth Rao <sidharthmrao@gmail.com>", "Ann Song <asong25@choate.edu>"]
+readme = "README.md"
+packages = [{include = "path_visualizer"}]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+robotpy-toolkit-7407 = "^2023.2.0.0"
+robotpy = {extras = ["wpimath"], version = "^2023.4.3.0"}
+wpilib = "^2023.4.3.0"
+pygame = "^2.3.0"
+robotpy-wpimath = "^2023.4.3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
