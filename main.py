@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import time
 
 import pygame
@@ -103,6 +104,7 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
     old_window = window.copy()
 
     start_time = time.time()
+    paused_time = 0
     last_display_time = 0
 
     if continuous:
@@ -111,29 +113,60 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
             window.blit(old_window, (0, 0))
             draw_point(window, current_state.pose.x, current_state.pose.y, color)
 
-            displ_time = (time.time() - start_time) * speed + display_start_time
+            disp_time = (time.time() - start_time) * speed + display_start_time
             display_vel = current_state.velocity
 
-            if displ_time - last_display_time >= 0.1:
-                display_current_time(window, displ_time)
+            if disp_time - last_display_time >= 0.1:
+                display_current_time(window, disp_time)
                 display_velocity(window, str(round(display_vel, 3)))
-                last_display_time = displ_time
+                last_display_time = disp_time
 
             old_window = window.copy()
 
             robot.draw(window, (current_state.pose.x, current_state.pose.y, 0))
 
             pygame.display.update()
+
+            paused = False
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    quit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_p:
+                        print("Paused")
+                        paused_time = time.time()
+                        paused = True
+                    if event.key == pygame.K_SPACE:
+                        trajectories, buttons = setup(window)
+                        return 0
+                    if event.key == pygame.K_s:
+                        pygame.image.save(window, f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+
+            while paused:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        quit()
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_p:
+                            paused = False
+                            start_time += time.time() - paused_time
+                        if event.key == pygame.K_SPACE:
+                            trajectories, buttons = setup(window)
+                            return 0
+                        if event.key == pygame.K_s:
+                            pygame.image.save(window,
+                                              f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
     else:
         for state in trajectory[0].trajectory.states():
             window.blit(old_window, (0, 0))
             draw_point(window, state.pose.x, state.pose.y, color)
 
-            display_time = (time.time() - start_time) * speed + display_start_time
+            disp_time = (time.time() - start_time) * speed + display_start_time
 
-            if display_time - last_display_time >= 0.1:
-                display_current_time(window, display_time)
-                last_display_time = display_time
+            if disp_time - last_display_time >= 0.1:
+                display_current_time(window, disp_time)
+                last_display_time = disp_time
 
             old_window = window.copy()
 
@@ -142,9 +175,43 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
             pygame.display.update()
             time.sleep(max(0, state.t - ((time.time() - start_time) * speed)))
 
+            paused = False
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    quit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_p:
+                        print("Paused")
+                        paused_time = time.time()
+                        paused = True
+                    if event.key == pygame.K_SPACE:
+                        trajectories, buttons = setup(window)
+                        return 0
+                    if event.key == pygame.K_s:
+                        pygame.image.save(window,
+                                          f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+
+            while paused:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        quit()
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_p:
+                            paused = False
+                            start_time += time.time() - paused_time
+                        if event.key == pygame.K_SPACE:
+                            trajectories, buttons = setup(window)
+                            return 0
+                        if event.key == pygame.K_s:
+                            pygame.image.save(window,
+                                              f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+
     window.blit(old_window, (0, 0))
 
     current_color += 1
+
+    return last_display_time
 
 
 def display_current_time(window, time_to_display):
@@ -218,10 +285,10 @@ def display_velocity(screen, data):
 def run_trajectories(window):
     trajectories, buttons = setup(window)
 
-    start_time = time.time()
+    last_time = 0
 
     for trajectory in trajectories:
-        animate_trajectory(window, trajectory, speed=config.speeds[config.current_speed_index], continuous=config.continuous, display_start_time=time.time() - start_time)
+        last_time = animate_trajectory(window, trajectory, speed=config.speeds[config.current_speed_index], continuous=config.continuous, display_start_time=last_time)
 
 
 def toggle_continuous():
@@ -284,6 +351,8 @@ def main():
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     trajectories, buttons = setup(window)
+                if event.key == pygame.K_s:
+                    pygame.image.save(window, f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
 
         user_coords = pygame.mouse.get_pos()
         display_coords(window, scale_to_meters(*user_coords))
