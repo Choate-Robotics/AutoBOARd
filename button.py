@@ -1,5 +1,7 @@
 import pygame
 
+import config
+
 
 class Button:
     def __init__(self, x, y, width, height, color, text='', font_size=32, font_color=(0, 0, 0), action=lambda: None):
@@ -50,4 +52,18 @@ class Toggle(Button):
 
     def click(self, surface):
         self.toggle(surface)
+        super().click(surface)
+
+
+class OptionList(Button):
+    def __init__(self, x, y, width, height, color, text='', font_size=32, font_color=(0, 0, 0), states=["Default"], start_state=0, action=lambda: None):
+        super().__init__(x, y, width, height, color, text, font_size, font_color, action)
+        self.states = states
+        self.current_state = start_state
+        self.text = self.states[self.current_state]
+
+    def click(self, surface):
+        self.current_state = (self.current_state + 1) % len(self.states)
+        self.text = self.states[self.current_state]
+        self.draw(surface)
         super().click(surface)

@@ -12,7 +12,7 @@ from trajectories.coords import coords_list
 from units.screen import scale_to_pixels, scale_to_meters
 
 from robot import Robot
-from button import Button, Toggle
+from button import Button, OptionList, Toggle
 
 WINDOW_WIDTH = int(constants.FIELD_WIDTH_METERS * constants.SCALE_FACTOR)
 WINDOW_HEIGHT = int(constants.FIELD_HEIGHT_METERS * constants.SCALE_FACTOR)
@@ -209,11 +209,15 @@ def run_trajectories(window):
     start_time = time.time()
 
     for trajectory in trajectories:
-        animate_trajectory(window, trajectory, speed=1.0, continuous=config.continuous, display_start_time=time.time() - start_time)
+        animate_trajectory(window, trajectory, speed=config.speeds[config.current_speed_index], continuous=config.continuous, display_start_time=time.time() - start_time)
 
 
 def toggle_continuous():
     config.continuous = not config.continuous
+
+
+def cycle_speed():
+    config.current_speed_index = (config.current_speed_index + 1) % len(config.speeds)
 
 
 def setup(window):
@@ -239,6 +243,11 @@ def setup(window):
     continuous_toggle.draw(window)
 
     buttons.append(continuous_toggle)
+
+    speeds_list = OptionList(100, 150, 80, 40, (255, 255, 255), states=["0.5x", "1x", "2x", "4x", "8x"], start_state=config.current_speed_index, font_size=16, action=cycle_speed)
+    speeds_list.draw(window)
+
+    buttons.append(speeds_list)
 
     return trajectories, buttons
 
@@ -266,8 +275,6 @@ def main():
         pygame.display.update()
 
         pygame.time.wait(10)
-
-
 
     pygame.display.update()
     pygame.quit()
