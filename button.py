@@ -28,16 +28,16 @@ class Button:
 
 
 class Toggle(Button):
-    def __init__(self, x, y, width, height, color, text='', font_size=32, font_color=(0, 0, 0), action=lambda: None):
+    def __init__(self, x, y, width, height, color, text='', font_size=32, font_color=(0, 0, 0), start_state=False, action=lambda: None):
         super().__init__(x, y, width, height, color, text, font_size, font_color, action)
-        self.state = False
+        self.state = start_state
 
     def draw(self, surface):
         # Draw border polygon around button
         width = self.rect.width + 10
         height = self.rect.height + 10
 
-        pygame.draw.polygon(surface, (255 if self.state else 0, 0 if self.state else 255, 0), [
+        pygame.draw.polygon(surface, (0 if self.state else 255, 255 if self.state else 0, 0), [
             (self.rect.center[0] - width / 2, self.rect.center[1] - height / 2),
             (self.rect.center[0] + width / 2, self.rect.center[1] - height / 2),
             (self.rect.center[0] + width / 2, self.rect.center[1] + height / 2),
@@ -46,7 +46,6 @@ class Toggle(Button):
         super().draw(surface)
 
     def toggle(self, surface):
-        print(self.state)
         self.state = not self.state
         self.draw(surface)
 

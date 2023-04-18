@@ -221,6 +221,7 @@ def cycle_speed():
 
 
 def setup(window):
+    window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     window.blit(scaled_field_image, (0, 0))
 
     trajectories = gen_trajectories(coords_list)
@@ -239,7 +240,7 @@ def setup(window):
 
     buttons.append(run_button)
 
-    continuous_toggle = Toggle(100, 100, 80, 40, (255, 255, 255), text="Continuous", font_size=16, action=toggle_continuous)
+    continuous_toggle = Toggle(100, 100, 80, 40, (255, 255, 255), text="Continuous", font_size=16, start_state=config.continuous, action=toggle_continuous)
     continuous_toggle.draw(window)
 
     buttons.append(continuous_toggle)
@@ -268,6 +269,9 @@ def main():
                 for button in buttons:
                     if button.is_clicked(mouse_pos):
                         button.click(surface=window)
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    trajectories, buttons = setup(window)
 
         user_coords = pygame.mouse.get_pos()
         display_coords(window, scale_to_meters(*user_coords))
