@@ -33,13 +33,9 @@ colors_list = [
     (0, 255, 255),
 ]
 
-global current_color
 current_color = 0
-global previous_rect
 previous_rect = pygame.rect.Rect(0, 0, 0, 0)
-global previous_time_rect
 previous_time_rect = pygame.rect.Rect(0, 0, 0, 0)
-global robot
 robot = Robot()
 
 
@@ -129,6 +125,13 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
         for state in trajectory[0].trajectory.states():
             window.blit(old_window, (0, 0))
             draw_point(window, state.pose.x, state.pose.y, color)
+
+            display_time = (time.time() - start_time) * speed + display_start_time
+
+            if display_time - last_display_time >= 0.1:
+                display_current_time(window, display_time)
+                last_display_time = display_time
+
             old_window = window.copy()
 
             robot.draw(window, (state.pose.x, state.pose.y, 0))

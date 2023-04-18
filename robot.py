@@ -1,8 +1,7 @@
 import math
 
 import pygame
-from pygame.sprite import Sprite
-from trajectories.config import robot_length, robot_width
+from config import robot_length, robot_width
 from units.screen import meters_to_pixels, scale_to_pixels
 
 
