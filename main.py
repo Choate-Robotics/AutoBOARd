@@ -121,6 +121,9 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
                 display_velocity(window, str(round(display_vel, 3)))
                 last_display_time = disp_time
 
+            user_coords = pygame.mouse.get_pos()
+            display_coords(window, scale_to_meters(*user_coords))
+
             old_window = window.copy()
 
             robot.draw(window, (current_state.pose.x, current_state.pose.y, 0))
@@ -144,6 +147,9 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
                         pygame.image.save(window, f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
 
             while paused:
+                user_coords = pygame.mouse.get_pos()
+                display_coords(window, scale_to_meters(*user_coords))
+                pygame.display.update()
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         quit()
@@ -167,6 +173,9 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
             if disp_time - last_display_time >= 0.1:
                 display_current_time(window, disp_time)
                 last_display_time = disp_time
+
+            user_coords = pygame.mouse.get_pos()
+            display_coords(window, scale_to_meters(*user_coords))
 
             old_window = window.copy()
 
@@ -193,6 +202,9 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
                                           f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
 
             while paused:
+                user_coords = pygame.mouse.get_pos()
+                display_coords(window, scale_to_meters(*user_coords))
+                pygame.display.update()
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         quit()
