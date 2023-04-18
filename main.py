@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 import pygame
@@ -6,6 +7,9 @@ from units.path import path
 from util.trajectory_generator import CustomTrajectory, gen_trajectories
 from util.trajectory_estimator import estimate_auto_duration
 from trajectories.coords import coords_list
+from units.screen import scale_to_pixels, scale_to_meters
+
+from robot import Robot
 
 WINDOW_WIDTH = int(constants.FIELD_WIDTH_METERS * constants.SCALE_FACTOR)
 WINDOW_HEIGHT = int(constants.FIELD_HEIGHT_METERS * constants.SCALE_FACTOR)
@@ -29,39 +33,11 @@ colors_list = [
 global current_color
 current_color = 0
 global previous_rect
-previous_rect = None
-
-
-def scale_to_meters(x, y):
-    """
-    Scales the x and y coordinates from pixels to meters
-    :param x: x position in pixels
-    :param y: y position in pixels
-    :return: x and y position in meters
-    """
-    scale = WINDOW_HEIGHT / constants.FIELD_HEIGHT_METERS
-
-    x_offset = (WINDOW_WIDTH - scale * constants.FIELD_WIDTH_METERS) / 2
-    y_offset = 0
-    new_x = round((x - x_offset) / scale, 3)
-    new_y = round((WINDOW_HEIGHT - y - y_offset) / scale, 3)
-    return new_x, new_y
-
-
-def scale_to_pixels(x: float, y: float):
-    """
-    Scales the x and y coordinates from meters to pixels
-    :param x: x position in meters
-    :param y: y position in meters
-    :return: x and y position in pixels
-    """
-    scale = WINDOW_HEIGHT / constants.FIELD_HEIGHT_METERS
-
-    x_offset = (WINDOW_WIDTH - scale * constants.FIELD_WIDTH_METERS) / 2
-    y_offset = 0
-    new_x = int(x * scale + x_offset)
-    new_y = int(WINDOW_HEIGHT - (y * scale + y_offset))
-    return new_x, new_y
+previous_rect = pygame.rect.Rect(0, 0, 0, 0)
+global previous_time_rect
+previous_time_rect = pygame.rect.Rect(0, 0, 0, 0)
+global robot
+robot = Robot()
 
 
 def draw_point(window, x: float, y: float, color: tuple = (255, 0, 0), radius: int = 1):
@@ -107,15 +83,15 @@ def draw_trajectory(window, trajectory: tuple[CustomTrajectory, path]):
     current_color += 1
 
 
-def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed: float = 1.0, continuous: bool = False):
+def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed: float = 1.0, continuous: bool = False, display_start_time=0):
     """
     Animates a trajectory on the field
     :param window: Pygame window
     :param trajectory: Trajectory
     :param speed: Speed of the animation
     :param continuous: Whether to draw a continuous curve
+    :param display_start_time: Time to display the start time for
     """
-
     global current_color
     color = colors_list[current_color % len(colors_list)]
 
@@ -124,28 +100,60 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
         draw_waypoint(window, point[0], point[1], color)
     draw_waypoint(window, trajectory[1][2][0], trajectory[1][2][1], color)
 
+    old_window = window.copy()
+
     start_time = time.time()
+    last_display_time = 0
 
     if continuous:
         while time.time() - start_time < trajectory[0].trajectory.totalTime() / speed:
             current_state = trajectory[0].trajectory.sample((time.time() - start_time) * speed)
+            window.blit(old_window, (0, 0))
             draw_point(window, current_state.pose.x, current_state.pose.y, color)
+
+            display_time = (time.time() - start_time) * speed + display_start_time
+
+            if display_time - last_display_time >= 0.1:
+                display_current_time(window, display_time)
+                last_display_time = display_time
+
+            old_window = window.copy()
+
+            robot.draw(window, (current_state.pose.x, current_state.pose.y, 0))
+
             pygame.display.update()
     else:
         for state in trajectory[0].trajectory.states():
+            window.blit(old_window, (0, 0))
             draw_point(window, state.pose.x, state.pose.y, color)
+            old_window = window.copy()
+
+            robot.draw(window, (state.pose.x, state.pose.y, 0))
+
             pygame.display.update()
             time.sleep(max(0, state.t - ((time.time() - start_time) * speed)))
+
+    window.blit(old_window, (0, 0))
 
     current_color += 1
 
 
-def display_data(window, coord, data, previous=False):
+def display_current_time(window, time_to_display):
+    """
+    Displays the current time on the field
+    :param window: Pygame window
+    :param time_to_display: Time to display
+    """
+    display_time(window, str(round(time_to_display, 3)))
+
+
+def display_data(window, coord, data, previous=None):
     """
     Displays data on the field
     :param window: Pygame window
     :param coord: Coordinate to display the data at
     :param data: Data to display
+    :param previous: Whether to clear the previous coords
     """
     font = pygame.font.SysFont("Arial", 20)
     text = font.render(data, True, (255, 0, 0))
@@ -154,30 +162,17 @@ def display_data(window, coord, data, previous=False):
     # Draw a rectangle to cover the previous text
     global previous_rect
 
-    if previous:
-        if previous_rect is not None:
-            pygame.draw.rect(
-                window,
-                (0, 0, 0),
-                (
-                    scale_to_pixels(coord[0], coord[1])[0],
-                    scale_to_pixels(coord[0], coord[1])[1],
-                    previous_rect.width,
-                    previous_rect.height
-                )
+    if previous_rect is not None:
+        pygame.draw.rect(
+            window,
+            (0, 0, 0),
+            (
+                scale_to_pixels(coord[0], coord[1])[0],
+                scale_to_pixels(coord[0], coord[1])[1],
+                previous_rect.width,
+                previous_rect.height
             )
-        else:
-            pygame.draw.rect(
-                window,
-                (0, 0, 0),
-                (
-                    scale_to_pixels(coord[0], coord[1])[0],
-                    scale_to_pixels(coord[0], coord[1])[1],
-                    text_rect.width,
-                    text_rect.height
-                )
-            )
-        previous_rect = text_rect
+        )
     else:
         pygame.draw.rect(
             window,
@@ -189,6 +184,7 @@ def display_data(window, coord, data, previous=False):
                 text_rect.height
             )
         )
+    previous_rect = text_rect
 
     window.blit(text, scale_to_pixels(coord[0], coord[1]))
     pygame.display.update()
@@ -196,13 +192,22 @@ def display_data(window, coord, data, previous=False):
 
 def display_coords(screen, coords):
     global previous_rect
-    display_data(screen, (2, 7.5), f"({coords[0]}, {coords[1]})", True)
+    display_data(screen, (2, 7.5), f"({coords[0]}, {coords[1]})", previous_rect)
+
+
+def display_time(screen, data):
+    global previous_time_rect
+    display_data(screen, (12.5, 7), data, previous_time_rect)
 
 
 def main():
     pygame.init()
     window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     window.blit(scaled_field_image, (0, 0))
+
+    robot_layer = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
+    robot_layer.fill((0, 0, 0, 0))
+    window.blit(robot_layer, (0, 0))
 
     trajectories = gen_trajectories(coords_list)
 
@@ -213,10 +218,12 @@ def main():
         "Estimated Auto Duration: " + str(round(estimate_auto_duration(trajectories), 2)) + "s"
     )
 
+    start_time = time.time()
     for trajectory in trajectories:
-        animate_trajectory(window, trajectory, speed=2.0)
+        animate_trajectory(window, trajectory, speed=1.0, continuous=True, display_start_time=time.time() - start_time)
 
     running = True
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -224,6 +231,9 @@ def main():
 
         user_coords = pygame.mouse.get_pos()
         display_coords(window, scale_to_meters(*user_coords))
+
+        pygame.display.update()
+
         pygame.time.wait(10)
 
     pygame.display.update()
