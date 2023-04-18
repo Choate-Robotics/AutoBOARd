@@ -31,6 +31,7 @@ class CustomTrajectory:
         max_accel: float,
         start_velocity: float = 0,
         end_velocity: float = 0,
+        rev: bool = False,
     ):
         self.start_pose = start_pose
         self.waypoints = waypoints
@@ -39,6 +40,7 @@ class CustomTrajectory:
         self.max_accel = max_accel
         self.start_velocity = start_velocity
         self.end_velocity = end_velocity
+        self.reversed = reversed
 
         config = TrajectoryConfig(
             self.max_velocity,
@@ -46,6 +48,7 @@ class CustomTrajectory:
         )
         config.setStartVelocity(self.start_velocity)
         config.setEndVelocity(self.end_velocity)
+        config.setReversed(rev)
 
         self.trajectory = TrajectoryGenerator.generateTrajectory(
             start=self.start_pose,
@@ -72,6 +75,7 @@ def get_trajectory(coords: path) -> CustomTrajectory:
         max_accel=coords[3][1],
         start_velocity=0,
         end_velocity=0,
+        rev=coords[4],
     )
 
 

@@ -36,6 +36,7 @@ colors_list = [
 current_color = 0
 previous_rect = pygame.rect.Rect(0, 0, 0, 0)
 previous_time_rect = pygame.rect.Rect(0, 0, 0, 0)
+previous_velocity_rect = pygame.rect.Rect(0, 0, 0, 0)
 robot = Robot()
 
 
@@ -110,11 +111,13 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
             window.blit(old_window, (0, 0))
             draw_point(window, current_state.pose.x, current_state.pose.y, color)
 
-            display_time = (time.time() - start_time) * speed + display_start_time
+            displ_time = (time.time() - start_time) * speed + display_start_time
+            display_vel = current_state.velocity
 
-            if display_time - last_display_time >= 0.1:
-                display_current_time(window, display_time)
-                last_display_time = display_time
+            if displ_time - last_display_time >= 0.1:
+                display_current_time(window, displ_time)
+                display_velocity(window, str(round(display_vel, 3)))
+                last_display_time = displ_time
 
             old_window = window.copy()
 
@@ -165,18 +168,16 @@ def display_data(window, coord, data, previous=None):
     text = font.render(data, True, (255, 0, 0))
 
     text_rect = text.get_rect()
-    # Draw a rectangle to cover the previous text
-    global previous_rect
 
-    if previous_rect is not None:
+    if previous is not None:
         pygame.draw.rect(
             window,
             (0, 0, 0),
             (
                 scale_to_pixels(coord[0], coord[1])[0],
                 scale_to_pixels(coord[0], coord[1])[1],
-                previous_rect.width,
-                previous_rect.height
+                previous.width,
+                previous.height
             )
         )
     else:
@@ -190,20 +191,28 @@ def display_data(window, coord, data, previous=None):
                 text_rect.height
             )
         )
-    previous_rect = text_rect
+
+    previous = text_rect
 
     window.blit(text, scale_to_pixels(coord[0], coord[1]))
     pygame.display.update()
 
+    return previous
+
 
 def display_coords(screen, coords):
     global previous_rect
-    display_data(screen, (2, 7.5), f"({coords[0]}, {coords[1]})", previous_rect)
+    previous_rect = display_data(screen, (2, 7.5), f"({coords[0]}, {coords[1]})", previous_rect)
 
 
 def display_time(screen, data):
     global previous_time_rect
-    display_data(screen, (12.5, 7), data, previous_time_rect)
+    previous_time_rect = display_data(screen, (12.5, 7), "Current Time: " + str(data), previous_time_rect)
+
+
+def display_velocity(screen, data):
+    global previous_velocity_rect
+    previous_velocity_rect = display_data(screen, (12.5, 6.5), "Velocity: " + data, previous_velocity_rect)
 
 
 def run_trajectories(window):
