@@ -13,16 +13,15 @@ class Robot:
         self.rect = self.image.get_rect()
         self.rect.center = (0, 0)
 
-        self.vertices = self.get_vertices()
+        self.angle = 0
 
     def set_position(self, x, y, angle):
         self.rect.center = scale_to_pixels(x, y)
-        self.vertices = self.get_vertices()
-        self.rotate_vertices(angle)
+        self.angle = angle
 
-    def rotate_vertices(self, angle):
+    def rotate_vertices(self, vertices, angle):
         new_vertices = []
-        for vertex in self.vertices:
+        for vertex in vertices:
             x = vertex[0] - self.rect.center[0]
             y = vertex[1] - self.rect.center[1]
 
@@ -31,7 +30,7 @@ class Robot:
 
             vertex = (new_x + self.rect.center[0], new_y + self.rect.center[1])
             new_vertices.append(vertex)
-        self.vertices = new_vertices
+        return new_vertices
 
     def get_vertices(self):
         return [
@@ -41,9 +40,10 @@ class Robot:
             (self.rect.center[0] - self.rect.width / 2, self.rect.center[1] + self.rect.height / 2)
         ]
 
-    def draw(self, window):
+    def draw(self, window, location: tuple[float, float, float]):
         # Draw a border of rectangle
-        vertices = self.vertices
+        self.set_position(*location)
+        vertices = self.rotate_vertices(self.get_vertices(), self.angle)
         pygame.draw.polygon(window, (255, 0, 0), vertices, 1)
 
 
