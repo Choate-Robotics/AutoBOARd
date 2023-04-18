@@ -2,6 +2,8 @@ import asyncio
 import time
 
 import pygame
+
+import config
 import constants
 from units.path import path
 from util.trajectory_generator import CustomTrajectory, gen_trajectories
@@ -10,7 +12,7 @@ from trajectories.coords import coords_list
 from units.screen import scale_to_pixels, scale_to_meters
 
 from robot import Robot
-from button import Button
+from button import Button, Toggle
 
 WINDOW_WIDTH = int(constants.FIELD_WIDTH_METERS * constants.SCALE_FACTOR)
 WINDOW_HEIGHT = int(constants.FIELD_HEIGHT_METERS * constants.SCALE_FACTOR)
@@ -201,31 +203,50 @@ def display_time(screen, data):
     display_data(screen, (12.5, 7), data, previous_time_rect)
 
 
-def main():
-    pygame.init()
-    window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    window.blit(scaled_field_image, (0, 0))
+def run_trajectories(window):
+    trajectories, buttons = setup(window)
 
-    robot_layer = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
-    robot_layer.fill((0, 0, 0, 0))
-    window.blit(robot_layer, (0, 0))
+    start_time = time.time()
+
+    for trajectory in trajectories:
+        animate_trajectory(window, trajectory, speed=1.0, continuous=config.continuous, display_start_time=time.time() - start_time)
+
+
+def toggle_continuous():
+    config.continuous = not config.continuous
+
+
+def setup(window):
+    window.blit(scaled_field_image, (0, 0))
 
     trajectories = gen_trajectories(coords_list)
 
-    print(estimate_auto_duration(trajectories))
     display_data(
         window,
         (12.5, 7.5),
         "Estimated Auto Duration: " + str(round(estimate_auto_duration(trajectories), 2)) + "s"
     )
 
-    button = Button(100, 50, 80, 40, (255, 255, 255))
-    button.draw(window)
+    # Add buttons
+    buttons = []
 
-    start_time = time.time()
+    run_button = Button(100, 50, 80, 40, (255, 255, 255), "Run", action=lambda: run_trajectories(window))
+    run_button.draw(window)
 
-    for trajectory in trajectories:
-        animate_trajectory(window, trajectory, speed=1.0, continuous=True, display_start_time=time.time() - start_time)
+    buttons.append(run_button)
+
+    continuous_toggle = Toggle(100, 100, 80, 40, (255, 255, 255), text="Continuous", font_size=16, action=toggle_continuous)
+    continuous_toggle.draw(window)
+
+    buttons.append(continuous_toggle)
+
+    return trajectories, buttons
+
+
+def main():
+    pygame.init()
+    window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    trajectories, buttons = setup(window)
 
     running = True
 
@@ -235,8 +256,9 @@ def main():
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                if button.is_clicked(mouse_pos):
-                    print("Clicked")
+                for button in buttons:
+                    if button.is_clicked(mouse_pos):
+                        button.click(surface=window)
 
         user_coords = pygame.mouse.get_pos()
         display_coords(window, scale_to_meters(*user_coords))
