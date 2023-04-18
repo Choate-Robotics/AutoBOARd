@@ -10,6 +10,7 @@ from trajectories.coords import coords_list
 from units.screen import scale_to_pixels, scale_to_meters
 
 from robot import Robot
+from button import Button
 
 WINDOW_WIDTH = int(constants.FIELD_WIDTH_METERS * constants.SCALE_FACTOR)
 WINDOW_HEIGHT = int(constants.FIELD_HEIGHT_METERS * constants.SCALE_FACTOR)
@@ -218,7 +219,11 @@ def main():
         "Estimated Auto Duration: " + str(round(estimate_auto_duration(trajectories), 2)) + "s"
     )
 
+    button = Button(100, 50, 80, 40, (255, 255, 255))
+    button.draw(window)
+
     start_time = time.time()
+
     for trajectory in trajectories:
         animate_trajectory(window, trajectory, speed=1.0, continuous=True, display_start_time=time.time() - start_time)
 
@@ -228,6 +233,10 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                if button.is_clicked(mouse_pos):
+                    print("Clicked")
 
         user_coords = pygame.mouse.get_pos()
         display_coords(window, scale_to_meters(*user_coords))
@@ -235,6 +244,8 @@ def main():
         pygame.display.update()
 
         pygame.time.wait(10)
+
+
 
     pygame.display.update()
     pygame.quit()
