@@ -20,8 +20,13 @@ WINDOW_HEIGHT = int(constants.FIELD_HEIGHT_METERS * constants.SCALE_FACTOR)
 
 # Charged up field image
 field_image = pygame.image.load("./images/field.png")
+field_inverted_image = pygame.image.load("./images/field_inverted.png")
 scaled_field_image = pygame.transform.scale(
     field_image,
+    (WINDOW_WIDTH, WINDOW_HEIGHT)
+)
+scaled_field_inverted_image = pygame.transform.scale(
+    field_inverted_image,
     (WINDOW_WIDTH, WINDOW_HEIGHT)
 )
 
@@ -323,9 +328,6 @@ def cycle_coords():
 
 
 def setup(window):
-    window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    window.blit(scaled_field_image, (0, 0))
-
     trajectories = gen_trajectories(config.coords_list[config.coords_index][0])
 
     display_data(
@@ -335,6 +337,9 @@ def setup(window):
     )
 
     robot.blue_team = config.coords_list[config.coords_index][2]
+
+    window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+    window.blit(scaled_field_image if robot.blue_team else scaled_field_inverted_image, (0, 0))
 
     # Add buttons
     buttons = []
