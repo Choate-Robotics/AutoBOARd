@@ -13,6 +13,7 @@ class Robot:
         self.rect.center = (0, 0)
 
         self.angle = 0
+        self.blue_team = False
 
     def set_position(self, x, y, angle):
         self.rect.center = scale_to_pixels(x, y)
@@ -43,6 +44,6 @@ class Robot:
         # Draw a border of rectangle
         self.set_position(*location)
         vertices = self.rotate_vertices(self.get_vertices(), self.angle)
-        pygame.draw.polygon(window, (255, 0, 0), vertices, 1)
+        pygame.draw.polygon(window, (0 if self.blue_team else 255, 0, 255 if self.blue_team else 0), vertices, 3)
 
 

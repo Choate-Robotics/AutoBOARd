@@ -9,7 +9,7 @@ import constants
 from units.path import path
 from util.trajectory_generator import CustomTrajectory, gen_trajectories
 from util.trajectory_estimator import estimate_auto_duration
-from trajectories.coords import coords_list
+from trajectories.coords_blue_three_no_guard import coords_list
 from units.screen import scale_to_pixels, scale_to_meters
 
 from robot import Robot
@@ -84,7 +84,8 @@ def draw_trajectory(window, trajectory: tuple[CustomTrajectory, path]):
     current_color += 1
 
 
-def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed: float = 1.0, continuous: bool = False, display_start_time=0):
+def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed: float = 1.0, continuous: bool = False,
+                       display_start_time=0):
     """
     Animates a trajectory on the field
     :param window: Pygame window
@@ -144,7 +145,8 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
                         trajectories, buttons = setup(window)
                         return 0
                     if event.key == pygame.K_s:
-                        pygame.image.save(window, f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+                        pygame.image.save(window,
+                                          f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
 
             while paused:
                 user_coords = pygame.mouse.get_pos()
@@ -300,7 +302,8 @@ def run_trajectories(window):
     last_time = 0
 
     for trajectory in trajectories:
-        last_time = animate_trajectory(window, trajectory, speed=config.speeds[config.current_speed_index], continuous=config.continuous, display_start_time=last_time)
+        last_time = animate_trajectory(window, trajectory, speed=config.speeds[config.current_speed_index],
+                                       continuous=config.continuous, display_start_time=last_time)
 
 
 def toggle_continuous():
@@ -311,17 +314,23 @@ def cycle_speed():
     config.current_speed_index = (config.current_speed_index + 1) % len(config.speeds)
 
 
+def cycle_coords():
+    config.coords_index = (config.coords_index + 1) % len(config.coords_list)
+
+
 def setup(window):
     window = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     window.blit(scaled_field_image, (0, 0))
 
-    trajectories = gen_trajectories(coords_list)
+    trajectories = gen_trajectories(config.coords_list[config.coords_index][0])
 
     display_data(
         window,
         (12.5, 7.5),
         "Estimated Auto Duration: " + str(round(estimate_auto_duration(trajectories), 2)) + "s"
     )
+
+    robot.blue_team = config.coords_list[config.coords_index][2]
 
     # Add buttons
     buttons = []
@@ -331,15 +340,23 @@ def setup(window):
 
     buttons.append(run_button)
 
-    continuous_toggle = Toggle(100, 100, 80, 40, (255, 255, 255), text="Continuous", font_size=16, start_state=config.continuous, action=toggle_continuous)
+    continuous_toggle = Toggle(100, 100, 80, 40, (255, 255, 255), text="Continuous", font_size=16,
+                               start_state=config.continuous, action=toggle_continuous)
     continuous_toggle.draw(window)
 
     buttons.append(continuous_toggle)
 
-    speeds_list = OptionList(100, 150, 80, 40, (255, 255, 255), states=["0.5x", "1x", "2x", "4x", "8x"], start_state=config.current_speed_index, font_size=16, action=cycle_speed)
+    speeds_list = OptionList(100, 150, 80, 40, (255, 255, 255), states=["0.5x", "1x", "2x", "4x", "8x"],
+                             start_state=config.current_speed_index, font_size=16, action=cycle_speed)
     speeds_list.draw(window)
 
     buttons.append(speeds_list)
+
+    coords_set = OptionList(100, 200, 150, 40, (255, 255, 255), states=[coords[1] for coords in config.coords_list],
+                            start_state=config.coords_index, font_size=16, action=cycle_coords)
+    coords_set.draw(window)
+
+    buttons.append(coords_set)
 
     return trajectories, buttons
 
@@ -364,7 +381,8 @@ def main():
                 if event.key == pygame.K_SPACE:
                     trajectories, buttons = setup(window)
                 if event.key == pygame.K_s:
-                    pygame.image.save(window, f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+                    pygame.image.save(window,
+                                      f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
 
         user_coords = pygame.mouse.get_pos()
         display_coords(window, scale_to_meters(*user_coords))

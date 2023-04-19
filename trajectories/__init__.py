@@ -1,0 +1,2 @@
+from trajectories.coords_blue_three_guard import coords_list as three_blue_guard
+from trajectories.coords_blue_three_no_guard import coords_list as three_blue_no_guard
