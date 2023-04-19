@@ -292,7 +292,7 @@ def display_data(window, coord, data, previous=None):
 
 def display_coords(screen, coords):
     global previous_rect
-    previous_rect = display_data(screen, (2, 7.5), f"({coords[0]}, {coords[1]})", previous_rect)
+    previous_rect = display_data(screen, (2, 7.5) if robot.blue_team else (2, 1), f"({coords[0]}, {coords[1]})", previous_rect)
 
 
 def display_time(screen, data):
@@ -307,6 +307,12 @@ def display_velocity(screen, data):
 
 def run_trajectories(window):
     trajectories, buttons = setup(window)
+
+    display_data(
+        window,
+        (12.5, 7.5),
+        "Estimated Auto Duration: " + str(round(estimate_auto_duration(trajectories), 2)) + "s"
+    )
 
     last_time = 0
 
@@ -344,24 +350,24 @@ def setup(window):
     # Add buttons
     buttons = []
 
-    run_button = Button(100, 50, 80, 40, (255, 255, 255), "Run", action=lambda: run_trajectories(window))
+    run_button = Button(100, 50 if robot.blue_team else (WINDOW_HEIGHT - 50), 80, 40, (255, 255, 255), "Run", action=lambda: run_trajectories(window))
     run_button.draw(window)
 
     buttons.append(run_button)
 
-    continuous_toggle = Toggle(100, 100, 80, 40, (255, 255, 255), text="Continuous", font_size=16,
+    continuous_toggle = Toggle(100, 100 if robot.blue_team else (WINDOW_HEIGHT - 100), 80, 40, (255, 255, 255), text="Continuous", font_size=16,
                                start_state=config.continuous, action=toggle_continuous)
     continuous_toggle.draw(window)
 
     buttons.append(continuous_toggle)
 
-    speeds_list = OptionList(100, 150, 80, 40, (255, 255, 255), states=["0.5x", "1x", "2x", "4x", "8x", "INSTANT"],
+    speeds_list = OptionList(100, 150 if robot.blue_team else (WINDOW_HEIGHT - 150), 80, 40, (255, 255, 255), states=["0.5x", "1x", "2x", "4x", "8x", "INSTANT"],
                              start_state=config.current_speed_index, font_size=16, action=cycle_speed)
     speeds_list.draw(window)
 
     buttons.append(speeds_list)
 
-    coords_set = OptionList(100, 200, 150, 40, (255, 255, 255), states=[coords[1] for coords in config.coords_list],
+    coords_set = OptionList(100, 200 if robot.blue_team else (WINDOW_HEIGHT - 200), 150, 40, (255, 255, 255), states=[coords[1] for coords in config.coords_list],
                             start_state=config.coords_index, font_size=16, action=cycle_coords)
     coords_set.draw(window)
 
