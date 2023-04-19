@@ -108,7 +108,9 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
     paused_time = 0
     last_display_time = 0
 
-    if continuous:
+    if speed == "instant":
+        draw_trajectory(window, trajectory)
+    elif continuous:
         while time.time() - start_time < trajectory[0].trajectory.totalTime() / speed:
             current_state = trajectory[0].trajectory.sample((time.time() - start_time) * speed)
             window.blit(old_window, (0, 0))
@@ -165,6 +167,8 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
                         if event.key == pygame.K_s:
                             pygame.image.save(window,
                                               f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
+
+        window.blit(old_window, (0, 0))
     else:
         for state in trajectory[0].trajectory.states():
             window.blit(old_window, (0, 0))
@@ -221,7 +225,7 @@ def animate_trajectory(window, trajectory: tuple[CustomTrajectory, path], speed:
                             pygame.image.save(window,
                                               f"screenshots/screenshot_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.png")
 
-    window.blit(old_window, (0, 0))
+        window.blit(old_window, (0, 0))
 
     current_color += 1
 
@@ -346,7 +350,7 @@ def setup(window):
 
     buttons.append(continuous_toggle)
 
-    speeds_list = OptionList(100, 150, 80, 40, (255, 255, 255), states=["0.5x", "1x", "2x", "4x", "8x"],
+    speeds_list = OptionList(100, 150, 80, 40, (255, 255, 255), states=["0.5x", "1x", "2x", "4x", "8x", "INSTANT"],
                              start_state=config.current_speed_index, font_size=16, action=cycle_speed)
     speeds_list.draw(window)
 
