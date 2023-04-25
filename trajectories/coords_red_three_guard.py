@@ -8,7 +8,7 @@ initial: coord = (1.55, 7.5, 0)
 go_get_first_cube: path = (
     initial,
     [],
-    (initial[0] + 5.25, initial[1] - 0.43, 0),
+    (initial[0] + 5.38, initial[1] - 0.43, 0),
     (4.5, 3.3),
     False
 )
@@ -29,7 +29,7 @@ go_get_second_cube: path = (
         (initial[0] + 4.2, initial[1] - 0.38),
         (initial[0] + 4.6, initial[1] - 1.6),
     ],
-    (initial[0] + 5.79, initial[1] - 1.7, 0),
+    (initial[0] + 5.79, initial[1] - 1.83, 0),
     (4, 2.5),
     False
 )
@@ -41,7 +41,7 @@ come_back_with_second_cube: path = (
         (initial[0] + 3.3, initial[1] - 0.2),
         (initial[0] + 1.85, initial[1] - 0.27),
     ],
-    (initial[0] + 0, initial[1] - 0.55, 0),
+    (initial[0] + 0, initial[1] - 0.65, 0),
     (3.6, 2.6),
     True
 )

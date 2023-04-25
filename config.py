@@ -9,5 +9,5 @@ continuous = True
 speeds = [0.5, 1.0, 2.0, 4.0, 8.0, "instant"]
 current_speed_index = 1
 
-coords_list = [three_blue_no_guard, three_blue_guard, three_red_guard]
+coords_list = [three_blue_no_guard, three_blue_guard, three_red_guard, link_guard_blue]
 coords_index = 0
