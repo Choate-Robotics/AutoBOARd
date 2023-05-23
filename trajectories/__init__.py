@@ -2,3 +2,5 @@ from trajectories.coords_blue_three_guard import coords_list as three_blue_guard
 from trajectories.coords_blue_three_no_guard import coords_list as three_blue_no_guard
 from trajectories.coords_red_three_guard import coords_list as three_red_guard
 from trajectories.link_guard_blue import coords_list as link_guard_blue
+from trajectories.coords_red_three_balance import coords_list as red_three_balance
+from trajectories.coords_blue_three_balance import coords_list as blue_three_balance
